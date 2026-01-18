@@ -16,18 +16,18 @@ export class GeminiService {
             generationConfig: {
                 responseMimeType: 'application/json',
                 responseSchema: {
-                    type: 'array' as any,
+                    type: 'array',
                     items: {
-                        type: 'object' as any,
+                        type: 'object',
                         properties: {
-                            title: { type: 'string' as any },
-                            content: { type: 'string' as any },
+                            title: { type: 'string' },
+                            content: { type: 'string' },
                             location: {
-                                type: 'array' as any,
-                                items: { type: 'number' as any },
+                                type: 'array',
+                                items: { type: 'number' },
                                 nullable: true
                             },
-                            summary: { type: 'string' as any }
+                            summary: { type: 'string' }
                         },
                         required: ['title', 'content', 'location', 'summary']
                     }
