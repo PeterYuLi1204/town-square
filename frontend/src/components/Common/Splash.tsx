@@ -1,95 +1,78 @@
 import { useState } from 'react'
+import { IoMdNavigate } from 'react-icons/io'
+import AddressSearch from './AddressSearch'
 
 export default function Splash({setUserLocation}: {setUserLocation: (location: [number, number]) => void}) {
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser')
-      return
-    }
-
-    setIsLoading(true)
+  const handleLocationSelect = (location: [number, number]) => {
+    setUserLocation(location)
     setError(null)
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const location: [number, number] = [
-          position.coords.latitude,
-          position.coords.longitude
-        ]
-        setUserLocation(location)
-        setIsLoading(false)
-      },
-      (error) => {
-        setIsLoading(false)
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setError('Location access denied. Please enable location permissions.')
-            break
-          case error.POSITION_UNAVAILABLE:
-            setError('Location information unavailable.')
-            break
-          case error.TIMEOUT:
-            setError('Location request timed out.')
-            break
-          default:
-            setError('An unknown error occurred.')
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    )
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage)
   }
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">Welcome</h1>
-        <p className="text-gray-600 mb-6 text-center">
-          Allow location access to view civic decisions in your area
-        </p>
-        
-        <button 
-          onClick={requestLocation}
-          disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
-        >
-          {isLoading ? (
-            <>
-              <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Getting location...
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Enable Location
-            </>
-          )}
-        </button>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800 text-center">{error}</p>
+    <div className="h-screen w-screen flex items-center justify-start bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-br from-blue-100/30 to-indigo-200/30 rounded-bl-full transform translate-x-1/4 -translate-y-1/4"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-linear-to-tr from-purple-100/20 to-blue-100/20 rounded-full blur-3xl"></div>
+      
+      {/* Main content container */}
+      <div className="relative z-10 max-w-xl w-full ml-8 md:ml-16 lg:ml-24 xl:ml-32 mr-8">
+        <div className="bg-white/80 backdrop-blur-sm p-10 rounded-2xl shadow-2xl border border-white/20">
+          {/* Header section */}
+          <div className="mb-8">
+            <h1 className="text-5xl font-bold text-gray-900 mb-4 leading-tight">
+              Welcome to
+              <br />
+              <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent italic">
+                Civic Pulse
+              </span>
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Discover civic decisions and community developments in your neighborhood. 
+              Stay informed about what's happening around you.
+            </p>
           </div>
-        )}
+          
+          {/* Search section */}
+          <div className="space-y-4">
+            <AddressSearch 
+              onLocationSelect={handleLocationSelect}
+              onError={handleError}
+            />
 
-        <button
-          onClick={() => setUserLocation([49.2827, -123.1207])}
-          className="w-full mt-3 text-gray-600 hover:text-gray-800 text-sm py-2"
-        >
-          Skip and use Vancouver, BC
-        </button>
+            {error && (
+              <div className="p-4 bg-red-50/80 border border-red-200 rounded-xl backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 py-2">
+              <div className="flex-1 h-px bg-linear-to-r from-transparent via-gray-300 to-transparent"></div>
+              <span className="text-xs text-gray-500 font-medium">OR</span>
+              <div className="flex-1 h-px bg-linear-to-r from-transparent via-gray-300 to-transparent"></div>
+            </div>
+
+            {/* Quick action button */}
+            <button
+              onClick={() => setUserLocation([49.2827, -123.1207])}
+              className="w-full py-3 px-4 bg-linear-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-700 rounded-xl border border-gray-200 transition-all duration-200 flex items-center justify-center gap-2 group shadow-sm hover:shadow-md"
+            >
+              <IoMdNavigate className="text-lg group-hover:rotate-45 transition-transform duration-300" />
+              <span className="font-medium">Skip and explore Vancouver, BC</span>
+            </button>
+          </div>
+
+          {/* Footer hint */}
+          <p className="mt-6 text-xs text-gray-500 text-center">
+            Your address is used only to show relevant local civic information
+          </p>
+        </div>
       </div>
     </div>
   )

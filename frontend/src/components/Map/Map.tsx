@@ -123,7 +123,7 @@ export default function Map({
         <MapBoundsHandler userLocation={userLocation} decisions={decisions} />
         
         {/* User location marker at center */}
-        <Marker position={userLocation} icon={userLocationIcon} />
+        <Marker position={userLocation} icon={userLocationIcon} interactive={false} />
 
         {decisionsWithLocations.map((decision) => (
           <Marker 

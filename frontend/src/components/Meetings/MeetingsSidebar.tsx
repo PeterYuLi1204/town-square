@@ -3,6 +3,7 @@ import MeetingDetail from './MeetingDetail';
 import MeetingsList from './MeetingsList';
 import SidebarHeader from './SidebarHeader';
 import { SIDEBAR_WIDTH } from '../../constants/layout';
+import FunFacts from './FunFacts';
 
 interface MeetingsSidebarProps {
   decisions: DecisionWithContext[];
@@ -13,8 +14,8 @@ interface MeetingsSidebarProps {
   onCancel?: () => void;
 }
 
-export default function MeetingsSidebar({ 
-  decisions, 
+export default function MeetingsSidebar({
+  decisions,
   loading = false,
   selectedDecision,
   onDecisionClick,
@@ -33,7 +34,7 @@ export default function MeetingsSidebar({
       style={{ width: `${SIDEBAR_WIDTH}px` }}
     >
       <div className="h-full flex flex-col">
-        <SidebarHeader 
+        <SidebarHeader
           decisionsCount={decisions.length}
           loading={loading}
           showCancel={loading || decisions.length > 0}
@@ -41,11 +42,15 @@ export default function MeetingsSidebar({
         />
 
         <div className="flex-1 overflow-y-auto p-3">
-          <MeetingsList 
-            decisions={decisions}
-            loading={loading}
-            onDecisionClick={onDecisionClick}
-          />
+          {loading && decisions.length === 0 ? (
+            <FunFacts />
+          ) : (
+            <MeetingsList
+              decisions={decisions}
+              loading={loading}
+              onDecisionClick={onDecisionClick}
+            />
+          )}
         </div>
       </div>
     </div>
