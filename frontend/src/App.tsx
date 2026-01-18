@@ -124,13 +124,13 @@ function App() {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    
+
     // Clear state
     setLoading(false);
     setDecisions([]);
     setSelectedDecision(null);
     setError(null);
-    
+
     // Clear date fields
     if (dateFilterRef.current) {
       dateFilterRef.current.clearDates();
