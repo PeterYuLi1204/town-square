@@ -28,7 +28,7 @@ export default function SidebarHeader({
     <div className="relative bg-white border-b border-gray-200 p-5 transition-all duration-300">
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>
             What's Happening
           </h2>
           <div className="flex items-center gap-2 mt-1">

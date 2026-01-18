@@ -22,7 +22,7 @@ export default function MeetingDetail({ decision, onBack }: MeetingDetailProps) 
   };
 
   return (
-    <div className="fixed top-0 right-0 h-full w-[350px] bg-gradient-to-b from-gray-50 to-white shadow-2xl z-[999]">
+    <div className="fixed top-0 right-0 h-full w-[370px] bg-gradient-to-b from-gray-50 to-white shadow-2xl z-[999]">
       <div className="h-full flex flex-col">
         {/* Header with back button */}
         <div className="relative bg-white border-b-2 border-blue-200 p-5">
