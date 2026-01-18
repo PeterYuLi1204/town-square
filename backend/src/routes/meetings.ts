@@ -1,7 +1,5 @@
 import express, { Request, Response } from 'express';
 import { fetchAllMeetings, filterMeetingsByDate, sortMeetingsByDate } from '../services/councilMeetingsService.js';
-
-import { extractMultipleMeetingsText } from '../services/pdfExtractorService.js';
 import { GeminiService } from '../services/gemini.service.js';
 import type { MeetingRecord } from '../types/meeting.js';
 
@@ -70,32 +68,14 @@ router.get('/meetings', async (req: Request, res: Response) => {
     // Step 3: Sort by date descending
     const sortedMeetings = sortMeetingsByDate(filteredMeetings);
 
-    // Step 4: Extract PDF text for each meeting
-    const meetingsWithText = await extractMultipleMeetingsText(sortedMeetings);
-
-    // Step 5: Process each meeting with Gemini and stream results
+    // Step 4 & 5: Stream the entire pipeline (PDF extraction -> Gemini processing)
     const service = getGeminiService();
 
-    // Helper for concurrency control
-    const runConcurrent = async <T>(
-      items: T[],
-      concurrency: number,
-      fn: (item: T) => Promise<void>
-    ) => {
-      const iterator = items.entries();
-      const workers = Array(Math.min(concurrency, items.length))
-        .fill(null)
-        .map(async () => {
-          for (const [_, item] of iterator) {
-            await fn(item);
-          }
-        });
-      await Promise.all(workers);
-    };
-
-    // State for re-sequencing events
+    // State for re-sequencing events and concurrency control
     let nextIndexToSend = 0;
     const pendingResults = new Map<number, MeetingRecord>();
+    const processingSet = new Set<number>();
+    let currentIndex = 0;
 
     // Helper to send buffered results in order
     const sendPendingResults = () => {
@@ -111,40 +91,67 @@ router.get('/meetings', async (req: Request, res: Response) => {
       }
     };
 
-    await runConcurrent(meetingsWithText, 3, async (meeting) => {
-      // Find the original index of this meeting in the sorted list
-      // This assumes meetingsWithText is sorted and we want to preserve that order
-      // We can use the meeting.id if it corresponds to the index, 
-      // but explicitly passing the index or finding it is safer if IDs aren't sequential 0..N
-      const index = meetingsWithText.findIndex(m => m.id === meeting.id);
-
-      try {
-        let meetingWithDecisions: MeetingRecord = { ...meeting };
-
-        if (service && meeting.pdfText) {
-          console.log(`Processing meeting ${meeting.id} (index ${index}) with Gemini...`);
-          const decisions = await service.extractMeetingDecisions(meeting.pdfText);
-          meetingWithDecisions.decisions = decisions;
-          console.log(`  Extracted ${decisions.length} decisions from meeting ${meeting.id}`);
+    // Worker function that processes meetings
+    const worker = async () => {
+      const { extractMeetingText } = await import('../services/pdfExtractorService.js');
+      
+      while (true) {
+        // Get next meeting to process
+        let meetingIndex: number;
+        let meeting: MeetingRecord;
+        
+        // Critical section: atomically get and mark next meeting
+        if (currentIndex >= sortedMeetings.length) {
+          break; // No more work
         }
+        meetingIndex = currentIndex++;
+        meeting = sortedMeetings[meetingIndex];
+        processingSet.add(meetingIndex);
+        
+        try {
+          let meetingWithDecisions: MeetingRecord = { ...meeting };
 
-        // Buffer the result instead of sending immediately
-        pendingResults.set(index, meetingWithDecisions);
+          // Step 1: Extract PDF text for this meeting
+          const pdfText = await extractMeetingText(meeting);
+          
+          if (pdfText) {
+            meetingWithDecisions.pdfText = pdfText;
 
-        // Try to send pending results
-        sendPendingResults();
+            // Step 2: Process with Gemini if available
+            if (service) {
+              console.log(`Processing meeting ${meeting.id} (index ${meetingIndex}) with Gemini...`);
+              const decisions = await service.extractMeetingDecisions(pdfText);
+              meetingWithDecisions.decisions = decisions;
+              console.log(`  Extracted ${decisions.length} decisions from meeting ${meeting.id}`);
+            }
+          }
 
-      } catch (error: any) {
-        console.error(`Error processing meeting ${meeting.id}:`, error.message);
+          // Buffer the result instead of sending immediately
+          pendingResults.set(meetingIndex, meetingWithDecisions);
 
-        // Even on error, we must account for this index to not block the stream
-        pendingResults.set(index, meeting);
-        sendPendingResults();
+          // Try to send pending results in order
+          sendPendingResults();
+
+        } catch (error: any) {
+          console.error(`Error processing meeting ${meeting.id}:`, error.message);
+
+          // Even on error, we must account for this index to not block the stream
+          pendingResults.set(meetingIndex, meeting);
+          sendPendingResults();
+        }
       }
-    });
+    };
+
+    // Start thread pool with all workers
+    const maxWorkers = 5;
+    console.log(`⚡ Starting thread pool with ${maxWorkers} workers...`);
+    const workers = Array(maxWorkers).fill(null).map(() => worker());
+    
+    // Wait for all workers to complete
+    await Promise.all(workers);
 
     // Send completion event
-    sendEvent('complete', { count: meetingsWithText.length });
+    sendEvent('complete', { count: sortedMeetings.length });
     console.log('=== SSE Stream Complete ===\n');
 
   } catch (error: any) {

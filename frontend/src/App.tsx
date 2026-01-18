@@ -110,11 +110,21 @@ function App() {
           meetingUrl: meeting.meetingUrl,
         }));
 
-        // Pseudo-stream decisions one by one for better UX
-        newDecisions.forEach((decision, index) => {
+        // Pseudo-stream decisions one by one for better UX, with random delay ~1000ms avg, std 150ms
+        const getRandomDelay = () => {
+          const u = 1 - Math.random();
+          const v = Math.random();
+          const stdNormal = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+          const randomMs = Math.round(1000 + 150 * stdNormal);
+          return Math.max(200, randomMs);
+        };
+        let cumulativeDelay = 0;
+        newDecisions.forEach((decision) => {
+          const delay = getRandomDelay();
+          cumulativeDelay += delay;
           setTimeout(() => {
             setDecisions(prev => [...prev, decision]);
-          }, index * 1000); // 1000ms delay between each decision
+          }, cumulativeDelay);
         });
       }
     });

@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import type { DecisionWithContext } from '../../App'
@@ -122,12 +122,41 @@ export default function Map({
   isSearching = false
 }: MapProps) {
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [newMarkers, setNewMarkers] = useState<Set<string>>(new Set())
+  const prevDecisionIdsRef = useRef<Set<string>>(new Set())
 
   // Filter decisions that have valid locations
   const decisionsWithLocations = decisions.filter(
     (d): d is DecisionWithContext & { location: [number, number] } => 
       d.location !== null && Array.isArray(d.location) && d.location.length === 2
   )
+
+  // Track new markers and trigger pop animation
+  useEffect(() => {
+    const currentIds = new Set(decisionsWithLocations.map(d => d.decisionId))
+    const newIds = new Set<string>()
+
+    currentIds.forEach(id => {
+      if (!prevDecisionIdsRef.current.has(id)) {
+        newIds.add(id)
+      }
+    })
+
+    if (newIds.size > 0) {
+      setNewMarkers(prev => new Set([...prev, ...newIds]))
+      
+      // Remove the "new" status after animation completes
+      setTimeout(() => {
+        setNewMarkers(prev => {
+          const updated = new Set(prev)
+          newIds.forEach(id => updated.delete(id))
+          return updated
+        })
+      }, 600) // Match animation duration
+    }
+
+    prevDecisionIdsRef.current = currentIds
+  }, [decisionsWithLocations])
 
   const handleSelectDecision = (decision: DecisionWithContext) => {
     if (onSelectDecision) {
@@ -180,21 +209,33 @@ export default function Map({
           zIndexOffset={1000}
         />
 
-        {decisionsWithLocations.map((decision) => (
-          <Marker 
-            key={decision.decisionId} 
-            position={decision.location}
-            icon={decisionMarkerIcon}
-            zIndexOffset={100}
-            eventHandlers={{
-              click: () => {
-                if (onMarkerClick) {
-                  onMarkerClick(decision)
+        {decisionsWithLocations.map((decision) => {
+          const isNew = newMarkers.has(decision.decisionId)
+          return (
+            <Marker 
+              key={decision.decisionId} 
+              position={decision.location}
+              icon={decisionMarkerIcon}
+              zIndexOffset={isNew ? 500 : 100}
+              eventHandlers={{
+                click: () => {
+                  if (onMarkerClick) {
+                    onMarkerClick(decision)
+                  }
+                },
+                add: (e) => {
+                  // Add pop animation class when marker is added
+                  if (isNew) {
+                    const markerElement = e.target.getElement()
+                    if (markerElement) {
+                      markerElement.classList.add('marker-pop')
+                    }
+                  }
                 }
-              }
-            }}
-          />
-        ))}
+              }}
+            />
+          )
+        })}
       </MapContainer>
 
       {/* AI Chat Overlay */}
