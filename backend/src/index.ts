@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+// Load environment variables immediately
+dotenv.config();
+
+// Debug log to verify loading
+console.log('Environment loaded check: GEMINI_API_KEY is key present?', !!process.env.GEMINI_API_KEY);
+
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import meetingsRouter from './routes/meetings.js';
-
-// Load environment variables
-dotenv.config();
+import geminiRouter from './routes/gemini.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +33,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api', meetingsRouter);
+app.use('/api', geminiRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -52,5 +57,6 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`API endpoint: http://localhost:${PORT}/api/meetings`);
+  console.log(`Gemini endpoint: http://localhost:${PORT}/api/extract-decisions`);
   console.log('=================================\n');
 });
