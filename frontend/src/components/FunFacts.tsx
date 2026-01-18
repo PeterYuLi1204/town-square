@@ -112,10 +112,7 @@ export default function FunFacts() {
     return (
         <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-6">
             <div className="relative">
-                <div className="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-xl animate-pulse">
-                    🤖
-                </div>
+                <div className="w-12 h-12 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin"></div>
             </div>
 
             <div>
@@ -126,12 +123,11 @@ export default function FunFacts() {
             </div>
 
             <div className="w-full bg-gray-50 rounded-xl border border-gray-200 p-5">
-                <div className="text-xs font-bold text-blue-600 mb-3 uppercase tracking-wider flex items-center justify-center gap-2">
-                    <span className="text-lg">💡</span> Did you know?
+                <div className="text-xs font-bold text-blue-600 mb-2 uppercase tracking-wider text-center">
+                    Did you know?
                 </div>
 
                 <div className={`transition-opacity duration-300 flex flex-col items-center gap-3 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-                    <span className="text-4xl">{currentFact.icon}</span>
                     <p className="text-gray-800 font-medium leading-relaxed">
                         "{currentFact.text}"
                     </p>
