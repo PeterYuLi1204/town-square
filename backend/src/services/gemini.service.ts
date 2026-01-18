@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import type { MeetingDecision, DecisionContext, ChatResponse } from '../types/gemini.js';
+import type { MeetingDecision, DecisionContext, ChatResponse, DateRangeContext } from '../types/gemini.js';
 
 export class GeminiService {
     private genAI: GoogleGenerativeAI;
@@ -48,6 +48,15 @@ export class GeminiService {
                         references: {
                             type: SchemaType.ARRAY,
                             items: { type: SchemaType.STRING }
+                        },
+                        suggestedDateRange: {
+                            type: SchemaType.OBJECT,
+                            properties: {
+                                startDate: { type: SchemaType.STRING },
+                                endDate: { type: SchemaType.STRING },
+                                reason: { type: SchemaType.STRING }
+                            },
+                            nullable: true
                         }
                     },
                     required: ['answer', 'references']
@@ -125,41 +134,90 @@ export class GeminiService {
         return decisions;
     }
 
-    private makeChatPrompt(message: string, decisions: DecisionContext[]): string {
-        const decisionsContext = decisions.map(d => 
-            `[ID: ${d.decisionId}] "${d.title}" (${d.meetingType}, ${d.meetingDate}): ${d.summary}`
-        ).join('\n');
+    private makeChatPrompt(
+        message: string, 
+        decisions: DecisionContext[], 
+        difficultyLevel: 'simple' | 'detailed' = 'simple',
+        currentDateRange?: DateRangeContext
+    ): string {
+        const decisionsContext = decisions.length > 0 
+            ? decisions.map(d => 
+                `[ID: ${d.decisionId}] "${d.title}" (${d.meetingType}, ${d.meetingDate}): ${d.summary}`
+              ).join('\n')
+            : 'No decisions are currently loaded.';
+
+        const dateRangeInfo = currentDateRange?.startDate && currentDateRange?.endDate
+            ? `The user is currently viewing decisions from ${currentDateRange.startDate} to ${currentDateRange.endDate}.`
+            : 'No specific date range is currently selected.';
+
+        const languageGuidance = difficultyLevel === 'simple'
+            ? `Use simple, everyday language that a 5th grader could understand. Avoid technical jargon, legal terms, and bureaucratic language. Use short sentences and common words.`
+            : `Use precise, technical language with proper terminology. Include relevant legal, administrative, and procedural details. Be thorough and accurate in your explanations.`;
+
+        const explanationStyle = difficultyLevel === 'simple'
+            ? `Focus on practical, real-world impacts. Explain "what this means for you" in concrete terms - how it affects daily life, neighborhoods, services, or local areas.`
+            : `Provide comprehensive analysis including policy implications, procedural context, and detailed administrative impacts. Include specific regulations, bylaws, and technical specifications where relevant.`;
 
         return `
-You are a helpful AI assistant for a Vancouver city council decisions app. You help users understand council meeting decisions.
+You are a helpful AI assistant for a Vancouver city council decisions app. Your purpose is to make complicated council data accessible to the public by explaining decisions in terms of their EFFECTS on local residents and communities.
 
-Here are the currently displayed decisions that the user can see:
+CURRENT CONTEXT:
+${dateRangeInfo}
+
+AVAILABLE DECISIONS:
 ${decisionsContext}
 
 USER QUESTION: ${message}
 
-INSTRUCTIONS:
-1. Answer the user's question based on the decisions provided above.
-2. Be helpful, concise, and informative.
-3. If the question is about decisions affecting a specific area or topic, identify relevant decisions from the list.
-4. In the "references" array, include the decision IDs (e.g., "1-0", "2-1") of any decisions you mention or that are relevant to your answer.
-5. If no decisions are relevant, provide a helpful response and leave references empty.
-6. Keep your answer focused and easy to understand for regular citizens.
-7. Format your answer using proper markdown syntax (use **bold**, *italic*, lists, etc. where appropriate).
-8. Use markdown formatting to make your response clear and readable.
+COMMUNICATION STYLE (${difficultyLevel.toUpperCase()} MODE):
+${languageGuidance}
+
+EXPLANATION APPROACH:
+${explanationStyle}
+
+CORE INSTRUCTIONS:
+1. **Effect-Based Explanations**: Always explain decisions in terms of their impact on people, neighborhoods, and daily life. Instead of "The council approved X", say "This means your neighborhood will..." or "Residents can expect..."
+
+2. **User-Centric Language**: Frame everything from the perspective of how it affects the user. Use "you", "your neighborhood", "local residents", etc.
+
+3. **Practical Impact**: Focus on tangible outcomes - what changes, what stays the same, what people need to know or do.
+
+4. **References**: In the "references" array, include the decision IDs (e.g., "1-0", "2-1") of any decisions you mention or that are relevant to your answer.
+
+5. **Date Range Detection**: If the user asks about a time period different from the current date range (e.g., "last month", "this year", "recent decisions", specific dates), provide a "suggestedDateRange" with:
+   - startDate: ISO date string (YYYY-MM-DD)
+   - endDate: ISO date string (YYYY-MM-DD)
+   - reason: Brief explanation of why you're suggesting this range
+
+6. **No Data Handling**: If no decisions are loaded and the user asks a question, suggest a relevant date range to search (e.g., last 30 days, last 3 months).
+
+7. **Markdown Formatting**: Use proper markdown syntax (**bold**, *italic*, lists, etc.) to make your response clear and scannable.
+
+EXAMPLES OF EFFECT-BASED LANGUAGE:
+❌ Bad: "Council approved a rezoning application for 123 Main Street"
+✅ Good: "A new apartment building will be built at 123 Main Street, bringing more housing to your neighborhood"
+
+❌ Bad: "The council passed a bylaw amendment regarding parking regulations"
+✅ Good: "Parking rules in downtown will change - you'll now be able to park for 2 hours instead of 1 hour"
 
 Respond with JSON containing:
-- "answer": Your helpful response to the user (formatted with markdown)
+- "answer": Your helpful, effect-based response (formatted with markdown)
 - "references": Array of decision IDs that are relevant to your answer
+- "suggestedDateRange": (optional) Object with startDate, endDate, and reason if user is asking about a different time period
 `;
     }
 
-    async chatWithDecisions(message: string, decisions: DecisionContext[]): Promise<ChatResponse> {
+    async chatWithDecisions(
+        message: string, 
+        decisions: DecisionContext[], 
+        difficultyLevel: 'simple' | 'detailed' = 'simple',
+        currentDateRange?: DateRangeContext
+    ): Promise<ChatResponse> {
         if (!message || typeof message !== 'string' || message.trim() === '') {
             throw new Error('Please provide a valid message');
         }
 
-        const prompt = this.makeChatPrompt(message, decisions);
+        const prompt = this.makeChatPrompt(message, decisions, difficultyLevel, currentDateRange);
         const result = await this.chatModel.generateContent(prompt);
         const response = await result.response;
         const text = response.text();

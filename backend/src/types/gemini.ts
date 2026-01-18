@@ -24,12 +24,26 @@ export interface DecisionContext {
     location: [number, number] | null;
 }
 
+export interface DateRangeContext {
+    startDate: string | null;
+    endDate: string | null;
+}
+
+export interface SuggestedDateRange {
+    startDate: string;
+    endDate: string;
+    reason: string;
+}
+
 export interface ChatRequest {
     message: string;
     decisions: DecisionContext[];
+    difficultyLevel?: 'simple' | 'detailed';
+    currentDateRange?: DateRangeContext;
 }
 
 export interface ChatResponse {
     answer: string;
     references: string[]; // Array of decisionIds
+    suggestedDateRange?: SuggestedDateRange;
 }

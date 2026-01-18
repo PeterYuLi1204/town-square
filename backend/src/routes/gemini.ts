@@ -66,7 +66,7 @@ router.post('/extract-decisions', async (req: Request, res: Response) => {
 // POST endpoint for AI chat with decisions context
 router.post('/chat', async (req: Request, res: Response) => {
     try {
-        const { message, decisions } = req.body as ChatRequest;
+        const { message, decisions, difficultyLevel, currentDateRange } = req.body as ChatRequest;
 
         // Validate message
         if (!message || typeof message !== 'string' || message.trim() === '') {
@@ -84,6 +84,14 @@ router.post('/chat', async (req: Request, res: Response) => {
             });
         }
 
+        // Validate difficulty level if provided
+        if (difficultyLevel && difficultyLevel !== 'simple' && difficultyLevel !== 'detailed') {
+            return res.status(400).json({
+                error: 'Invalid request',
+                message: 'difficultyLevel must be either "simple" or "detailed"'
+            });
+        }
+
         // Check if Gemini service is initialized
         const service = getGeminiService();
         if (!service) {
@@ -93,8 +101,13 @@ router.post('/chat', async (req: Request, res: Response) => {
             });
         }
 
-        // Get chat response
-        const chatResponse = await service.chatWithDecisions(message, decisions);
+        // Get chat response with optional parameters
+        const chatResponse = await service.chatWithDecisions(
+            message, 
+            decisions, 
+            difficultyLevel || 'simple',
+            currentDateRange
+        );
 
         // Return the response
         res.json({
