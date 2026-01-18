@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import type { MeetingDecision } from '../types/gemini.js';
 
 export class GeminiService {
@@ -16,18 +16,18 @@ export class GeminiService {
             generationConfig: {
                 responseMimeType: 'application/json',
                 responseSchema: {
-                    type: 'array',
+                    type: SchemaType.ARRAY,
                     items: {
-                        type: 'object',
+                        type: SchemaType.OBJECT,
                         properties: {
-                            title: { type: 'string' },
-                            content: { type: 'string' },
+                            title: { type: SchemaType.STRING },
+                            content: { type: SchemaType.STRING },
                             location: {
-                                type: 'array',
-                                items: { type: 'number' },
+                                type: SchemaType.ARRAY,
+                                items: { type: SchemaType.NUMBER },
                                 nullable: true
                             },
-                            summary: { type: 'string' }
+                            summary: { type: SchemaType.STRING }
                         },
                         required: ['title', 'content', 'location', 'summary']
                     }
