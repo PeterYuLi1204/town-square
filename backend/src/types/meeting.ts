@@ -1,3 +1,5 @@
+import type { MeetingDecision } from './gemini.js';
+
 export interface MeetingRecord {
   id: number;
   meetingType: string;
@@ -5,6 +7,7 @@ export interface MeetingRecord {
   eventDate: string;
   meetingUrl: string;
   pdfText?: string;
+  decisions?: MeetingDecision[];
 }
 
 export interface VancouverAPIMeeting {

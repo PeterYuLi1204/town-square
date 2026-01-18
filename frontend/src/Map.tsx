@@ -1,6 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import type { DecisionWithContext } from './App'
 
 // Fix for default marker icon in React-Leaflet
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,28 +12,39 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-interface Location {
-  id: string
-  name: string
-  position: [number, number]
-  description?: string
-}
-
 interface MapProps {
   center?: [number, number]
   zoom?: number
-  markers?: Location[]
+  decisions?: DecisionWithContext[]
+  onMarkerClick?: (decision: DecisionWithContext) => void
 }
 
 export default function Map({ 
   center = [49.2827, -123.1207], 
   zoom = 13,
-  markers = [
-    { id: '1', name: 'Vancouver', position: [49.2827, -123.1207], description: 'Downtown Vancouver' },
-    { id: '2', name: 'Stanley Park', position: [49.3017, -123.1417], description: 'Beautiful park' },
-    { id: '3', name: 'UBC', position: [49.2606, -123.2460], description: 'University of British Columbia' },
-  ]
+  decisions = [],
+  onMarkerClick
 }: MapProps) {
+  // Filter decisions that have valid locations
+  const decisionsWithLocations = decisions.filter(
+    (d): d is DecisionWithContext & { location: [number, number] } => 
+      d.location !== null && Array.isArray(d.location) && d.location.length === 2
+  )
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'No date';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   return (
     <MapContainer
       center={center}
@@ -45,8 +57,34 @@ export default function Map({
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {markers.map((marker) => (
-        <Marker key={marker.id} position={marker.position} />
+      {decisionsWithLocations.map((decision) => (
+        <Marker 
+          key={decision.decisionId} 
+          position={decision.location}
+          eventHandlers={{
+            click: () => {
+              if (onMarkerClick) {
+                onMarkerClick(decision)
+              }
+            }
+          }}
+        >
+          <Popup>
+            <div className="max-w-[250px]">
+              <h3 className="font-semibold text-sm mb-1">{decision.title}</h3>
+              <p className="text-xs text-gray-500 mb-2">
+                {decision.meetingType} • {formatDate(decision.meetingDate)}
+              </p>
+              <p className="text-xs text-gray-600 line-clamp-3">{decision.summary}</p>
+              <button
+                onClick={() => onMarkerClick && onMarkerClick(decision)}
+                className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                View details →
+              </button>
+            </div>
+          </Popup>
+        </Marker>
       ))}
     </MapContainer>
   )

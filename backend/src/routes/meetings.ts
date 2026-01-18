@@ -1,8 +1,27 @@
 import express, { Request, Response } from 'express';
 import { fetchAllMeetings, filterMeetingsByDate, sortMeetingsByDate } from '../services/councilMeetingsService.js';
 import { extractMultipleMeetingsText } from '../services/pdfExtractorService.js';
+import { GeminiService } from '../services/gemini.service.js';
+import type { MeetingRecord } from '../types/meeting.js';
 
 const router = express.Router();
+
+// Initialize Gemini service lazily
+let geminiService: GeminiService | null = null;
+
+const getGeminiService = (): GeminiService | null => {
+  if (geminiService) return geminiService;
+
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  if (geminiApiKey) {
+    try {
+      geminiService = new GeminiService(geminiApiKey);
+    } catch (error) {
+      console.error('Failed to initialize Gemini service:', error);
+    }
+  }
+  return geminiService;
+};
 
 /**
  * GET /api/meetings
@@ -10,13 +29,29 @@ const router = express.Router();
  *   - startDate: YYYY-MM-DD (optional)
  *   - endDate: YYYY-MM-DD (optional)
  * 
- * Returns: Array of meeting records with PDF text
+ * Returns: Server-Sent Events stream with meeting decisions
+ * Events:
+ *   - meeting: A meeting with its AI-extracted decisions
+ *   - complete: All meetings processed
+ *   - error: An error occurred
  */
 router.get('/meetings', async (req: Request, res: Response) => {
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.flushHeaders();
+
+  const sendEvent = (event: string, data: any) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
   try {
     const { startDate, endDate } = req.query;
 
-    console.log('\n=== Fetching Meetings ===');
+    console.log('\n=== Fetching Meetings (SSE) ===');
     console.log(`Date range: ${startDate || 'any'} to ${endDate || 'any'}`);
 
     // Step 1: Fetch all meetings from Vancouver API
@@ -37,21 +72,38 @@ router.get('/meetings', async (req: Request, res: Response) => {
     // Step 4: Extract PDF text for each meeting
     const meetingsWithText = await extractMultipleMeetingsText(sortedMeetings);
 
-    console.log('=== Request Complete ===\n');
+    // Step 5: Process each meeting with Gemini and stream results
+    const service = getGeminiService();
+    
+    for (const meeting of meetingsWithText) {
+      try {
+        let meetingWithDecisions: MeetingRecord = { ...meeting };
 
-    res.json({
-      success: true,
-      count: meetingsWithText.length,
-      meetings: meetingsWithText
-    });
+        if (service && meeting.pdfText) {
+          console.log(`Processing meeting ${meeting.id} with Gemini...`);
+          const decisions = await service.extractMeetingDecisions(meeting.pdfText);
+          meetingWithDecisions.decisions = decisions;
+          console.log(`  Extracted ${decisions.length} decisions`);
+        }
+
+        // Send meeting with decisions to client
+        sendEvent('meeting', meetingWithDecisions);
+      } catch (error: any) {
+        console.error(`Error processing meeting ${meeting.id}:`, error.message);
+        // Send meeting without decisions if Gemini fails
+        sendEvent('meeting', meeting);
+      }
+    }
+
+    // Send completion event
+    sendEvent('complete', { count: meetingsWithText.length });
+    console.log('=== SSE Stream Complete ===\n');
 
   } catch (error: any) {
     console.error('Error in /api/meetings:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch meetings',
-      message: error.message
-    });
+    sendEvent('error', { message: error.message });
+  } finally {
+    res.end();
   }
 });
 

@@ -8,24 +8,20 @@ interface DateRangeFilterProps {
 export default function DateRangeFilter({ onFilter, loading = false }: DateRangeFilterProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isFiltered, setIsFiltered] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
-  const handleStartDateChange = (value: string) => {
+  const handleApplyFilter = () => {
     if (loading) return;
-    setStartDate(value);
-    onFilter(value, endDate);
-  };
-
-  const handleEndDateChange = (value: string) => {
-    if (loading) return;
-    setEndDate(value);
-    onFilter(startDate, value);
+    onFilter(startDate, endDate);
+    setIsFiltered(true);
   };
 
   const handleClear = () => {
     setStartDate('');
     setEndDate('');
+    setIsFiltered(false);
     onFilter('', '');
   };
 
@@ -34,7 +30,7 @@ export default function DateRangeFilter({ onFilter, loading = false }: DateRange
       <input
         type="date"
         value={startDate}
-        onChange={(e) => handleStartDateChange(e.target.value)}
+        onChange={(e) => setStartDate(e.target.value)}
         placeholder="Start date"
         max={endDate || today}
         className="px-3 py-1.5 border border-gray-300 rounded text-sm text-black bg-white min-w-[140px]"
@@ -45,14 +41,14 @@ export default function DateRangeFilter({ onFilter, loading = false }: DateRange
       <input
         type="date"
         value={endDate}
-        onChange={(e) => handleEndDateChange(e.target.value)}
+        onChange={(e) => setEndDate(e.target.value)}
         placeholder="End date"
         min={startDate || undefined}
         max={today}
         className="px-3 py-1.5 border border-gray-300 rounded text-sm text-black bg-white"
       />
 
-      {(startDate || endDate) && (
+      {isFiltered ? (
         <button
           onClick={handleClear}
           disabled={loading}
@@ -60,6 +56,15 @@ export default function DateRangeFilter({ onFilter, loading = false }: DateRange
           title="Clear filters"
         >
           ✕
+        </button>
+      ) : (
+        <button
+          onClick={handleApplyFilter}
+          disabled={loading || (!startDate && !endDate)}
+          className="px-3 py-1.5 border border-gray-300 rounded text-sm bg-white text-black disabled:opacity-50"
+          title="Apply filter"
+        >
+          Filter
         </button>
       )}
     </div>
