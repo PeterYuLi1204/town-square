@@ -23,7 +23,7 @@ export default function MeetingCard({ decision, onClick }: MeetingCardProps) {
 
   return (
     <div 
-      className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer group"
+      className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-all cursor-pointer group"
       onClick={() => onClick(decision)}
     >
       <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
