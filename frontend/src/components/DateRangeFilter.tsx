@@ -13,7 +13,7 @@ export default function DateRangeFilter({ onFilter, loading = false }: DateRange
   const today = new Date().toISOString().split('T')[0];
 
   const handleApplyFilter = () => {
-    if (loading) return;
+    if (loading || !startDate || !endDate) return;
     onFilter(startDate, endDate);
     setIsFiltered(true);
   };

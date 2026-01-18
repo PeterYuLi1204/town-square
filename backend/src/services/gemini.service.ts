@@ -16,18 +16,18 @@ export class GeminiService {
             generationConfig: {
                 responseMimeType: 'application/json',
                 responseSchema: {
-                    type: 'array',
+                    type: 'array' as any,
                     items: {
-                        type: 'object',
+                        type: 'object' as any,
                         properties: {
-                            title: { type: 'string' },
-                            content: { type: 'string' },
+                            title: { type: 'string' as any },
+                            content: { type: 'string' as any },
                             location: {
-                                type: 'array',
-                                items: { type: 'number' },
+                                type: 'array' as any,
+                                items: { type: 'number' as any },
                                 nullable: true
                             },
-                            summary: { type: 'string' }
+                            summary: { type: 'string' as any }
                         },
                         required: ['title', 'content', 'location', 'summary']
                     }
@@ -49,6 +49,14 @@ export class GeminiService {
         }
 
         The title must be understandable in layman language. The location, if it exists, must be included as a latitude and a longitude.
+
+        IMPORTANT INSTRUCTIONS:
+        1. The title must be understandable in layman language.
+        2. The location field should contain [latitude, longitude] coordinates if the decision mentions a specific address, street, intersection, park, building, or neighborhood in Vancouver, BC, Canada.
+        3. Look for addresses like "5238 Granville Street", "West 37th Avenue", "1495 West 37th Avenue", street intersections, park names, or specific locations.
+        4. Use your knowledge to geocode Vancouver addresses to approximate lat/lng coordinates. Vancouver is centered around [49.2827, -123.1207].
+        5. If no specific location is mentioned, set location to null.
+        6. For rezoning, development, or construction decisions, extract the address from the decision text.
 
         For example, given the following text:
         THAT Council authorize City staff to negotiate to the satisfaction of the City's
