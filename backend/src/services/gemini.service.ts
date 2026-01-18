@@ -88,12 +88,27 @@ export class GeminiService {
         5. If no specific location is mentioned, set location to null.
         6. For rezoning, development, or construction decisions, extract the address from the decision text.
 
-        SUMMARY WRITING STYLE:
-        - Write summaries in a clear, positive, and informative tone that helps residents understand what's happening
-        - Focus on accuracy and completeness - include key details like costs, timelines, and specific outcomes
-        - Use straightforward language that's accessible to all residents, but maintain professionalism
-        - Frame decisions constructively while staying factual - explain what will happen and why it matters
-        - Keep summaries concise but informative (2-3 sentences typically)
+        CONTENT vs SUMMARY - CRITICAL DISTINCTION:
+        
+        **CONTENT** (Detailed, Thorough Explanation):
+        - Write a COMPREHENSIVE, DETAILED explanation that thoroughly breaks down the decision
+        - This should be LONG and THOROUGH - aim for 5-10 sentences or more for complex decisions
+        - Explain what the decision means, what will happen, WHY it's happening, and provide full context
+        - Include ALL important details: specific costs and budget breakdown, detailed timelines, exact locations, key stakeholders, implementation steps, and expected outcomes
+        - Break down complex bureaucratic language into clear, understandable explanations with context
+        - Explain the background, rationale, and implications of the decision
+        - Address what changes for residents, what stays the same, and what to expect
+        - Use multiple paragraphs if needed to fully explain the decision
+        - Use clear, professional language that's accessible but comprehensive and informative
+        - Think of this as a detailed article that gives residents the COMPLETE picture and full understanding
+        - DO NOT just copy the raw meeting text - transform it into a well-explained, thorough narrative
+        
+        **SUMMARY** (Concise Overview):
+        - Write a brief, concise overview in 2-3 sentences maximum
+        - Focus on the most essential information: what's happening and why it matters
+        - Use clear, positive, and informative tone
+        - This is the "at a glance" version - quick and easy to understand
+        - Keep it straightforward and accessible to all residents
         - Avoid overly casual language or slang - this is official information that needs to be reliable
 
         For example, given the following text:
@@ -110,15 +125,7 @@ export class GeminiService {
         You would output:
         {
             "title": "City Employees Get New Mental Health Support Services",
-            "content": "THAT Council authorize City staff to negotiate to the satisfaction of the City's
-        Chief Human Resources Officer, City's Director of Legal Services, and the City's
-        Chief Procurement Officer and enter into a contract with Homewood Health Inc.
-        ("HHI") under which HHI will provide Employee and Family Assistance Plan
-        services for an initial term of (3) three-years with an estimated contract value of
-        $1,122,076 plus applicable taxes, with the option to extend for (6) six additional
-        (1) one- year terms, with an estimated contract value of $3,570,983, plus
-        applicable taxes over the entire term of the contract to be funded through the
-        operating budget",
+            "content": "The City Council has authorized staff to negotiate and enter into a comprehensive contract with Homewood Health Inc. (HHI) to provide Employee and Family Assistance Plan (EFAP) services for all city employees and their families. This decision comes as part of the city's ongoing commitment to supporting the mental health and wellbeing of its workforce. The EFAP program will offer a wide range of services including confidential counseling, mental health support, stress management resources, work-life balance assistance, and family support services. These services are designed to help city employees navigate personal and professional challenges, from mental health concerns to financial planning and family issues.\n\nThe contract structure is designed to provide both stability and flexibility. The initial term is set for three years with an estimated value of $1,122,076 plus applicable taxes. However, recognizing that employee needs may evolve, the contract includes options to extend for up to six additional one-year terms. If all extension options are exercised, the total contract value would reach approximately $3,570,983 plus taxes over a nine-year period. This represents an average annual investment of approximately $374,000 in employee wellness and mental health support.\n\nThe contract negotiation and execution will require approval from multiple city officials to ensure proper oversight and value for taxpayers. Specifically, the Chief Human Resources Officer will ensure the services meet employee needs, the Director of Legal Services will review all legal aspects and terms, and the Chief Procurement Officer will verify that the contract follows proper procurement procedures and represents good value. All funding for these services will come from the city's existing operating budget, meaning no additional budget allocation or tax increases are required. This decision reflects the city's recognition that investing in employee mental health and wellbeing not only supports staff but also leads to better service delivery for residents.",
             "location": null,
             "summary": "The City Council has approved a contract with Homewood Health Inc. to provide Employee and Family Assistance Plan services for city staff. The initial three-year contract is valued at $1.1 million, with the option to extend for up to six additional years, bringing the total potential value to $3.6 million, funded through the city's operating budget."
         }

@@ -1,4 +1,4 @@
-import { IoChevronBack, IoCalendarOutline, IoLocationSharp, IoDocumentTextOutline, IoLinkOutline, IoSparkles } from 'react-icons/io5';
+import { IoChevronBack, IoInformationCircleOutline, IoDocumentTextOutline, IoLinkOutline, IoSparkles } from 'react-icons/io5';
 import type { DecisionWithContext } from '../../App';
 
 interface MeetingDetailProps {
@@ -48,8 +48,8 @@ export default function MeetingDetail({ decision, onBack }: MeetingDetailProps) 
           {/* Meeting context */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 pb-2.5 shadow-sm">
             <div className="flex items-center mb-3">
-              <IoCalendarOutline className="w-4 h-4 text-gray-500 mr-2" />
-              <h4 className="font-semibold text-gray-700 text-xs uppercase tracking-wide">When & Where</h4>
+              <IoInformationCircleOutline className="w-4 h-4 text-gray-500 mr-2" />
+              <h4 className="font-semibold text-gray-700 text-xs uppercase tracking-wide">Meeting Info</h4>
             </div>
             <div className="space-y-2">
               <p className="text-sm text-gray-700 flex items-start">
@@ -84,19 +84,6 @@ export default function MeetingDetail({ decision, onBack }: MeetingDetailProps) 
               {decision.summary}
             </p>
           </div>
-
-          {/* Location */}
-          {decision.location && (
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-              <div className="flex items-center mb-2">
-                <IoLocationSharp className="w-4 h-4 text-gray-500 mr-2" />
-                <h4 className="font-semibold text-gray-700 text-xs uppercase tracking-wide">Location</h4>
-              </div>
-              <p className="text-sm text-gray-700 font-mono">
-                {decision.location[0].toFixed(4)}, {decision.location[1].toFixed(4)}
-              </p>
-            </div>
-          )}
 
           {/* Full content */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">

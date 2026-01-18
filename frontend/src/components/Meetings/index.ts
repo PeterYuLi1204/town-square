@@ -1,3 +1,4 @@
+export { default as DistanceFilter } from './DistanceFilter';
 export { default as MeetingCard } from './MeetingCard';
 export { default as MeetingDetail } from './MeetingDetail';
 export { default as MeetingsList } from './MeetingsList';
