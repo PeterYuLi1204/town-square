@@ -2,8 +2,8 @@
 
 A digital town square where residents stay informed and engaged with their local community. Town Square removes barriers to civic engagement by making council decisions relevant and accessible, translating bureaucratic language into neighborhood-focused conversations.
 
-<img height="250" alt="demopic1" src="https://github.com/user-attachments/assets/26b3482a-6a26-4f52-be02-c5a896bf45ce" />
-<img height="250" alt="demopic3" src="https://github.com/user-attachments/assets/d026c93f-bc29-4663-aa83-99da1844297b" />
+<img height="200" alt="demopic1" src="https://github.com/user-attachments/assets/26b3482a-6a26-4f52-be02-c5a896bf45ce" />
+<img height="200" alt="demopic3" src="https://github.com/user-attachments/assets/d026c93f-bc29-4663-aa83-99da1844297b" />
 
 ## Inspiration
 
