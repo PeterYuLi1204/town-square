@@ -4,6 +4,7 @@ import { Splash, DateRangeFilter } from './components/Common'
 import type { DateRangeFilterRef } from './components/Common/DateRangeFilter'
 import { MeetingsSidebar } from './components/Sidebar'
 import { SIDEBAR_WIDTH } from './constants/layout'
+import { API_BASE_URL } from './config'
 import './App.css'
 
 export interface MeetingDecision {
@@ -30,8 +31,6 @@ export interface DecisionWithContext extends MeetingDecision {
   meetingDate: string;
   meetingUrl: string;
 }
-
-const API_BASE_URL = 'http://localhost:3001';
 
 function App() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);

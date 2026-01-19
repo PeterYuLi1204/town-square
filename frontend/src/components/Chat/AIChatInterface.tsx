@@ -3,8 +3,7 @@ import { IoClose, IoTrash, IoSend, IoSparkles } from 'react-icons/io5';
 import ReactMarkdown from 'react-markdown';
 import type { DecisionWithContext } from '../../App';
 import DifficultyToggle from './DifficultyToggle';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { API_BASE_URL } from '../../config';
 
 interface Message {
   id: string;
